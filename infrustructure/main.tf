@@ -21,6 +21,15 @@ provider "aws" {
   region  = "us-east-2"
 }
 
+locals {
+  queue_url = ""
+}
+
+resource "aws_sqs_queue" "test_queue" {
+  name  = "test_queue"
+  visibility_timeout_seconds = 120
+}
+
 resource "aws_iam_role" "test_lambda_role" {
   name               = "test_lambda_role"
   assume_role_policy = <<EOF
@@ -48,4 +57,10 @@ resource "aws_lambda_function" "test_lambda" {
   runtime       = "python3.8"
   timeout       = var.lambda_timeout
   memory_size   = var.lambda_memory_limit
+
+  environment {
+    variables = {
+      "QUEUE_URL" = aws_sqs_queue.test_queue.id
+    }
+  }
 }

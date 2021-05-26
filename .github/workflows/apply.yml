@@ -19,7 +19,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
+      - name: Build Lambda
+        working-directory: .
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: |
+          bash ./scripts/build.sh
+          cp ./build/lambda.zip ./infrustructure/
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -119,4 +126,5 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve
+
     
