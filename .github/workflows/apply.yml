@@ -20,13 +20,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build Lambda
-        working-directory: .
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        run: |
-          bash ./scripts/build.sh
-          cp ./build/lambda.zip ./infrustructure/
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -127,4 +120,15 @@ jobs:
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve
 
+      - name: Build Lambda
+        working-directory: .
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: bash ./scripts/build.sh
+
+      - name: Deploy Lambda
+        uses: chrislennon/action-aws-cli@v1.1
+        run: aws lambda update-function-code --function-name test_lambda --zip-file fileb://./build/lambda.zip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
