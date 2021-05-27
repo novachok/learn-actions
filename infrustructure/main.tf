@@ -43,6 +43,23 @@ resource "aws_iam_role" "input_lambda_role" {
   })
 }
 
+resource "aws_iam_role" "output_lambda_role" {
+  name               = "output_lambda_role"
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  })
+}
+
 resource "aws_iam_policy" "sqs_write_policy" {
   name = "sqs_write_allowness"
   policy = jsonencode({
@@ -75,4 +92,14 @@ resource "aws_lambda_function" "input_lambda" {
       "QUEUE_URL" = aws_sqs_queue.events_queue.id
     }
   }
+}
+
+resource "aws_lambda_function" "output_lambda" {
+  filename      = "lambda.zip"
+  function_name = "output_lambda"
+  role          = aws_iam_role.output_lambda_role.arn
+  handler       = "app.handler"
+  runtime       = "python3.8"
+  timeout       = var.lambda_timeout
+  memory_size   = var.lambda_memory_limit
 }
