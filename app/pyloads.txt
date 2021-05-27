@@ -16,7 +16,7 @@
 {
     "event_name": "poll_deleted",
     "attributes": {
-        "organisation_id": 1
+        "organisation_id": 1,
         "organisation_name": null,
         "organisation_subscription_tier": null,
         "event_id": null,
