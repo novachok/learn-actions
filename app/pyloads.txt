@@ -1,0 +1,31 @@
+# Organisation Created
+{
+    "event_name": "organisation_created",
+    "attributes": {
+        "organisation_id": 1,
+        "organisation_name": null,
+        "organisation_email": null,
+        "organisation_avatar": null,
+        "organisation_about": null,
+        "organisation_image": null,
+        "organisation_marketing_consent": null
+    }
+}
+
+# Poll deleted
+{
+    "event_name": "poll_deleted",
+    "attributes": {
+        "organisation_id": 1
+        "organisation_name": null,
+        "organisation_subscription_tier": null,
+        "event_id": null,
+        "event_name": null,
+        "event_duration": null,
+        "event_published": null,
+        "days_to_event_start": null,
+        "poll_id": 3,
+        "question": null,
+        "options": null
+    }
+}

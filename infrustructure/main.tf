@@ -26,8 +26,8 @@ resource "aws_sqs_queue" "events_queue" {
   visibility_timeout_seconds = 120
 }
 
-resource "aws_iam_role" "input_lambda_role" {
-  name               = "input_lambda_role"
+resource "aws_iam_role" "input_lambda" {
+  name               = "inputLambdaRole"
   assume_role_policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
@@ -43,8 +43,8 @@ resource "aws_iam_role" "input_lambda_role" {
   })
 }
 
-resource "aws_iam_role" "output_lambda_role" {
-  name               = "output_lambda_role"
+resource "aws_iam_role" "output_lambda" {
+  name               = "outputLambdaRole"
   assume_role_policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
@@ -73,15 +73,15 @@ resource "aws_iam_policy" "sqs_write_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "input_lambda_policy" {
-  role = aws_iam_role.input_lambda_role.name
+resource "aws_iam_role_policy_attachment" "input_lambda" {
+  role = aws_iam_role.input_lambda.name
   policy_arn = aws_iam_policy.sqs_write_policy.arn
 }
 
 resource "aws_lambda_function" "input_lambda" {
   filename      = "lambda.zip"
   function_name = "input_lambda"
-  role          = aws_iam_role.input_lambda_role.arn
+  role          = aws_iam_role.input_lambda.arn
   handler       = "app.handler"
   runtime       = "python3.8"
   timeout       = var.lambda_timeout
@@ -109,10 +109,27 @@ data "aws_iam_policy_document" "output_lambda_policy_doc" {
   }
 
   statement {
-    sid       = "AllowInvokingLambdas"
+    sid       = "AllowInvokLambda"
     effect    = "Allow"
-    resources = ["arn:aws:lambda:ap-southeast-1:*:function:*"]
+    resources = ["arn:aws:lambda:*:*:function:*"]
     actions   = ["lambda:InvokeFunction"]
+  }
+
+  statement {
+    sid       = "AllowCreatingLogGroups"
+    effect    = "Allow"
+    resources = ["arn:aws:logs:*:*:*"]
+    actions   = ["logs:CreateLogGroup"]
+  }
+  statement {
+    sid       = "AllowWritingLogs"
+    effect    = "Allow"
+    resources = ["arn:aws:logs:*:*:log-group:/aws/lambda/*:*"]
+
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
   }
 }
 
@@ -120,15 +137,15 @@ resource "aws_iam_policy" "output_lambda_policy" {
   policy = data.aws_iam_policy_document.output_lambda_policy_doc.json
 }
 
-resource "aws_iam_role_policy_attachment" "output_lambda_policy_attachment" {
-  role = aws_iam_role.output_lambda_role.arn
+resource "aws_iam_role_policy_attachment" "output_lambda_at" {
+  role = aws_iam_role.output_lambda.name
   policy_arn = aws_iam_policy.output_lambda_policy.arn
 }
 
 resource "aws_lambda_function" "output_lambda" {
   filename      = "lambda.zip"
   function_name = "output_lambda"
-  role          = aws_iam_role.output_lambda_role.arn
+  role          = aws_iam_role.output_lambda.arn
   handler       = "app.handler"
   runtime       = "python3.8"
   timeout       = var.lambda_timeout

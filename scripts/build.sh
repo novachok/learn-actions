@@ -9,5 +9,6 @@ zip $C_DIR/build/input.zip ./*
 
 rm -rf $TMP_DIR/*
 cp $C_DIR/app/src/output/*py $TMP_DIR
+cp -R $C_DIR/app/src/output/lib $TMP_DIR
 cd $TMP_DIR
 zip $C_DIR/build/output.zip ./*
