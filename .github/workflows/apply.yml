@@ -120,15 +120,15 @@ jobs:
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve
 
-      - name: Build Lambda
+      - name: Build Lambdas
         working-directory: .
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: bash ./scripts/build.sh
       
-      - name: Deploy lambda
+      - name: Deploy Input lambda
         uses: ItsKarma/aws-cli@v1.70.0
         with:
-          args: lambda update-function-code --function-name test_lambda --zip-file fileb://./build/lambda.zip
+          args: lambda update-function-code --function-name input_lambda --zip-file fileb://./build/input.zip
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -21,38 +21,50 @@ provider "aws" {
   region  = "us-east-2"
 }
 
-locals {
-  queue_url = ""
-}
-
-resource "aws_sqs_queue" "test_queue" {
-  name  = "test_queue"
+resource "aws_sqs_queue" "events_queue" {
+  name  = "events_queue"
   visibility_timeout_seconds = 120
 }
 
-resource "aws_iam_role" "test_lambda_role" {
-  name               = "test_lambda_role"
-  assume_role_policy = <<EOF
-{
+resource "aws_iam_role" "input_lambda_role" {
+  name               = "input_lambda_role"
+  assume_role_policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
-        {
+      {
         "Action": "sts:AssumeRole",
         "Principal": {
-            "Service": "lambda.amazonaws.com"
+          "Service": "lambda.amazonaws.com"
         },
         "Effect": "Allow",
         "Sid": ""
-        }
+      }
     ]
-}
-EOF
+  })
 }
 
-resource "aws_lambda_function" "test_lambda" {
+resource "aws_iam_policy" "sqs_write_policy" {
+  name = "sqs_write_allowness"
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Sid": "AllowSqsWrite",
+      "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.events_queue.arn}"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "input_lambda_policy" {
+  role = aws_iam_role.input_lambda_role.name
+  policy_arn = aws_iam_policy.sqs_write_policy.arn
+}
+
+resource "aws_lambda_function" "input_lambda" {
   filename      = "lambda.zip"
-  function_name = "test_lambda"
-  role          = aws_iam_role.test_lambda_role.arn
+  function_name = "input_lambda"
+  role          = aws_iam_role.input_lambda_role.arn
   handler       = "app.handler"
   runtime       = "python3.8"
   timeout       = var.lambda_timeout
@@ -60,7 +72,7 @@ resource "aws_lambda_function" "test_lambda" {
 
   environment {
     variables = {
-      "QUEUE_URL" = aws_sqs_queue.test_queue.id
+      "QUEUE_URL" = aws_sqs_queue.events_queue.id
     }
   }
 }
