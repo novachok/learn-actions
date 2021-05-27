@@ -94,6 +94,37 @@ resource "aws_lambda_function" "input_lambda" {
   }
 }
 
+data "aws_iam_policy_document" "output_lambda_policy_doc" {
+  statement {
+    sid       = "AllowSQSPermssions"
+    effect    = "Allow"
+    resources = [ "arn:aws:sqs:*" ]
+
+    actions = [
+      "sqs:ChangeMessageVisibility",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ReceiveMessage",
+    ]
+  }
+
+  statement {
+    sid       = "AllowInvokingLambdas"
+    effect    = "Allow"
+    resources = ["arn:aws:lambda:ap-southeast-1:*:function:*"]
+    actions   = ["lambda:InvokeFunction"]
+  }
+}
+
+resource "aws_iam_policy" "output_lambda_policy" {
+  policy = data.aws_iam_policy_document.output_lambda_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "output_lambda_policy_attachment" {
+  role = aws_iam_role.output_lambda_role.arn
+  policy_arn = aws_iam_policy.output_lambda_policy.arn
+}
+
 resource "aws_lambda_function" "output_lambda" {
   filename      = "lambda.zip"
   function_name = "output_lambda"
